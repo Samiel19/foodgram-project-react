@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-j-nb0o&edwl+tj-mpy341+h*dz4n7wdl67&6xyf#rc$446d*(f
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -87,7 +87,7 @@ DATABASES = {
     }
 }
 
-
+AUTH_USER_MODEL = 'user.FoodgramUser'
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
@@ -115,14 +115,13 @@ REST_FRAMEWORK = {
     ['rest_framework.permissions.IsAuthenticatedOrReadOnly', ],
 }
 
+
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'HIDE_USERS': False,
     'PERMISSIONS': {
-        'resipe': ('api.permissions.AuthorStaffOrReadOnly,',),
-        'recipe_list': ('api.permissions.AuthorStaffOrReadOnly',),
-        'user': ('api.permissions.OwnerUserOrReadOnly',),
-        'user_list': ('api.permissions.OwnerUserOrReadOnly',),
+        'recipy': ('api.permissions.IsAuthorOrReadOnlyPermission,',),
+        'recipy_list': ('api.permissions.IsAuthorOrReadOnlyPermission',),
     },
     'SERIALIZERS': {
         'user': 'api.serializers.UserSerializer',

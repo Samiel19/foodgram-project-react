@@ -5,6 +5,16 @@ from rest_framework.permissions import SAFE_METHODS, BasePermission
 from rest_framework.routers import APIRootView
 
 
+class AdminOrReadOnly(BasePermission):
+    def has_permission(self, request, view):
+
+        if request.method in SAFE_METHODS:
+            return True
+
+        if request.user.is_authenticated and request.user.role == "admin":
+            return True
+
+
 class BanPermission(BasePermission):
     def has_permission(
         self,
@@ -22,13 +32,13 @@ class BanPermission(BasePermission):
 class IsAuthorOrReadOnlyPermission(permissions.BasePermission):
 
     def has_permission(self, request, view):
-        return (request.method in permissions.SAFE_METHODS
+        return (request.method in SAFE_METHODS
                 or request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
         if obj.author == request.user or obj.author.is_staff:
             return True
-        return request.method in permissions.SAFE_METHODS
+        return request.method in SAFE_METHODS
 
 class OwnerUserOrReadOnly(BanPermission):
     def has_object_permission(

@@ -1,3 +1,43 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import Recipy, Ingredient, Tag, IngredientAmount, Favorites, Cart
+
+
+class IngredientInline(admin.TabularInline):
+    model = IngredientAmount
+    extra = 1
+
+
+class IngredientAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'name',
+        'units'
+    )
+    search_fields = ('name',)
+    list_filter = ('name',)
+
+
+
+class RecipyAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'author',
+        'name',
+        'image',
+        'text',
+        'is_favorited',
+    )
+    search_fields = ('author__username', 'name',)
+    list_filter = ('author', 'name', 'tags')
+    inlines = (IngredientInline,)
+    def is_favorited(self, obj):
+        return obj.favorite_recipy.count()
+
+
+admin.site.register(Recipy, RecipyAdmin)
+admin.site.register(Ingredient, IngredientAdmin)
+admin.site.register(IngredientAmount)
+admin.site.register(Tag)
+admin.site.register(Cart)
+admin.site.register(Favorites)

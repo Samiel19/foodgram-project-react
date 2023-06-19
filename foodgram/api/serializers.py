@@ -1,44 +1,38 @@
 import base64
-import webcolors
 
-from collections import OrderedDict
-
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate
 from django.core.files.base import ContentFile
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
-from recipy.models import Ingredient, Recipy, Tag, User, IngredientAmount, Favorites, Cart
+from recipy.models import Ingredient, Recipy, Tag, User, Favorites, Cart
 from user.models import Follow
-from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
+from rest_framework import serializers, exceptions
 from rest_framework.validators import UniqueTogetherValidator
+from djoser.serializers import TokenCreateSerializer
 
-from core.validator import tags_exist_validator, ingredients_validator
+from djoser.conf import settings
+from core.validator import tags_validator, ingredients_validator
 from core.service import ingredient_amount
 
 
-class ShortRecipySerializer(serializers.ModelSerializer):
-    """Сериализатор для модели Recipe.
-    Определён укороченный набор полей для некоторых эндпоинтов.
-    """
-    class Meta:
-        model = Recipy
-        fields = 'id', 'name', 'image', 'cooking_time'
-        read_only_fields = '__all__',
 
 
+class CustomTokenCreateSerializer(TokenCreateSerializer):
+    def validate(self, attrs):
+        password = attrs.get("password")
+        params = {settings.LOGIN_FIELD: attrs.get(settings.LOGIN_FIELD)}
+        self.user = authenticate(**params, password=password)
+        if not self.user:
+            self.user = User.objects.filter(**params).first()
+            if self.user and not self.user.check_password(password):
+                self.fail("invalid_credentials")
+        if self.user and not self.user.is_active:
+            raise ValidationError("Пользователь заблокирован!")
+        elif self.user and self.user.is_active:
+            return attrs
+        self.fail("invalid_credentials")
 
-class Hex2NameColor(serializers.Field):
-    def to_representation(self, value):
-        return value
-
-    def to_internal_value(self, data):
-        try:
-            data = webcolors.hex_to_name(data)
-        except ValueError:
-            raise serializers.ValidationError('Для этого цвета нет имени')
-        return data
-
+    
 
 class UserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
@@ -152,7 +146,7 @@ class FollowSerializer(serializers.ModelSerializer):
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ('__all__')
+        fields = '__all__'
         read_only_fields = '__all__',
 
 
@@ -198,14 +192,14 @@ class RecipySerializer(serializers.ModelSerializer):
 
 
     def validate(self, data):
-        tags_ids = self.initial_data.get('tags')
+        tags_id = self.initial_data.get('tags')
         ingredients = self.initial_data.get('ingredients')
-        if not tags_ids or not ingredients:
+        if not tags_id or not ingredients:
             raise ValidationError('Недостаточно данных.')
-        tags_exist_validator(tags_ids, Tag)
+        tags_validator(tags_id, Tag)
         ingredients = ingredients_validator(ingredients, Ingredient)
         data.update({
-            'tags': tags_ids,
+            'tags': tags_id,
             'ingredients': ingredients,
             'author': self.context.get('request').user
         })

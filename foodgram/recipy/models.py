@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MinLengthValidator
+
+from foodgram.settings import MIN_LEN
 
 
 User = get_user_model()
@@ -10,17 +12,21 @@ class Tag(models.Model):
     name = models.CharField(
         verbose_name='Тэг',
         max_length=64,
-        unique=True
+        unique=True,
+        validators=[MinLengthValidator(MIN_LEN)]
     )
     color = models.CharField(
         verbose_name='Цвет',
+        default='#0000FF',
         max_length=7,
         unique=True,
+        validators=[MinLengthValidator(7)]
     )
     slug = models.CharField(
         verbose_name='Слаг',
         max_length=64,
         unique=True,
+        validators=[MinLengthValidator(MIN_LEN)]
     )
 
     class Meta:
@@ -29,39 +35,59 @@ class Tag(models.Model):
         ordering = ('name',)
 
     def __str__(self):
-        return self.name
+        return  f'{self.name} {self.color}'
+    
+    def clean(self):
+        self.name = self.name.strip().lower()
+        self.slug = self.slug.strip().lower()
+        return super().clean()
     
 
 class Ingredient(models.Model):
     name = models.CharField(
         verbose_name='Ингридиент',
         max_length=64,
+        validators=[MinLengthValidator(MIN_LEN)]
     )
     units = models.CharField(
         verbose_name='Единицы измерения',
         max_length=64,
+        validators=[MinLengthValidator(MIN_LEN)]
     )
 
     class Meta:
         verbose_name = 'Ингридиент'
         verbose_name_plural = 'Ингридиенты'
         ordering = ('name',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=('name', 'measurement_unit'),
+                name='unique_for_ingredient'
+                ),
+            ]
+            
 
     def __str__(self):
         return f'{self.name} {self.units}'
+    
+    def clean(self):
+        self.name = self.name.strip().lower()
+        self.units = self.units.strip().lower()
+        return super().clean()
     
 
 class Recipy(models.Model):
     name = models.CharField(
         verbose_name='Название блюда',
-        max_length = 64
+        max_length = 64,
+        validators=[MinLengthValidator(MIN_LEN)]
     )
     author = models.ForeignKey(
         User,
         verbose_name='Автор рецепта',
         related_name='recipes',
         on_delete=models.SET_NULL,
-        null=True
+        null=True,
     )
     tags = models.ManyToManyField(
         Tag,
@@ -86,6 +112,7 @@ class Recipy(models.Model):
     text = models.TextField(
         verbose_name='Описание блюда',
         max_length=500,
+        validators=[MinLengthValidator(MIN_LEN)]
     )
     cooking_time = models.PositiveIntegerField(
         verbose_name='Время приготовления',
@@ -115,7 +142,7 @@ class IngredientAmount(models.Model):
         related_name='recipy',
         on_delete=models.CASCADE,
     )
-    amount = models.PositiveSmallIntegerField(
+    amount = models.PositiveIntegerField(
         verbose_name='Количество',
         default=0,
     )
@@ -124,13 +151,12 @@ class IngredientAmount(models.Model):
         verbose_name = 'Ингридиент'
         verbose_name_plural = 'Количество ингридиентов'
         ordering = ('recipy', )
-        constraints = (
+        constraints = [
             models.UniqueConstraint(
                 fields=('recipy', 'ingredients', ),
                 name='Это уже добавили!',
             ),
-        )
-
+        ]
 
     def __str__(self):
         return f'{self.amount} в {self.ingredients}'
@@ -197,37 +223,3 @@ class Favorites(models.Model):
 
     def __str__(self) -> str:
         return f'{self.user}: {self.recipy}'
-    
-
-"""class Follow(models.Model):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='follower',
-        verbose_name='Пользователь'
-    )
-    following = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='following',
-        verbose_name='Читаемый автор'
-    )
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'following'],
-                name='unique_follower'
-            ),
-            models.CheckConstraint(
-                check=~models.Q(user=models.F('following')),
-                name='no_selfsubscribe'
-            )
-        ]
-        verbose_name = 'Подписка'
-        verbose_name_plural = 'Подписки'
-        ordering = ('user', )
-
-
-    def __str__(self):
-        return f'{self.user} {self.following}'"""

@@ -1,11 +1,8 @@
 import datetime
-from api.mixins import AddDelViewMixin
-from django.core.handlers.wsgi import WSGIRequest
-from django.db.models import F, Q, QuerySet, Sum
+
 from django.shortcuts import HttpResponse, get_object_or_404
-from rest_framework import viewsets, filters, pagination, status, generics
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly, IsAdminUser, DjangoModelPermissions)
+from rest_framework import viewsets, pagination, status, generics
+from rest_framework.permissions import (AllowAny, IsAuthenticated,)
 
 from recipy.models import Ingredient, Recipy, Tag, User, Favorites, Cart, IngredientAmount
 from user.models import Follow
@@ -15,7 +12,6 @@ from .serializers import (
     UserSerializer,
     FollowSerializer,
     IngredientSerializer,
-    ShortRecipySerializer,
     FavoritesSerializer,
     CartSerializer,
     UserFollowSerializer
@@ -24,7 +20,6 @@ from .permissions import IsAuthorOrReadOnlyPermission, AdminOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import decorators
-from djoser.views import UserViewSet as UV
 
 
 METHODS = 'GET', 'POST', 'DELETE',
@@ -93,14 +88,13 @@ class RecipyViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthorOrReadOnlyPermission,)
     pagination_class = pagination.PageNumberPagination
     pagination_class.page_size = 6
-    add_serializer = ShortRecipySerializer
 
     def get_queryset(self):
 
         queryset = self.queryset
 
         author = self.request.query_params.get('author')
-        tags = self.request.query_params.get('tags')
+        tags = self.request.query_params.getlist('tags')
         in_cart = self.request.query_params.get('is_in_shopping_cart')
         is_favorite = self.request.query_params.get('is_favorited')
         if is_favorite:
@@ -117,8 +111,8 @@ class RecipyViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-    
 
+    
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()

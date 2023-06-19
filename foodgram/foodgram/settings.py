@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+from django.core.validators import MinLengthValidator
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -124,6 +125,7 @@ DJOSER = {
         'recipy_list': ('api.permissions.IsAuthorOrReadOnlyPermission',),
     },
     'SERIALIZERS': {
+        'token_create': 'api.serializers.CustomTokenCreateSerializer',
         'user': 'api.serializers.UserSerializer',
         'user_list': 'api.serializers.UserSerializer',
         'current_user': 'api.serializers.UserSerializer',
@@ -131,11 +133,10 @@ DJOSER = {
     },
 }
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-ru'
 
 TIME_ZONE = 'UTC'
 
@@ -163,3 +164,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 PASSWORD_RESET_TIMEOUT = 60 * 60
+
+
+MIN_LEN=1

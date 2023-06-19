@@ -1,1 +1,1 @@
-# praktikum_new_diplom
+# praktikum_samiel19_diplom

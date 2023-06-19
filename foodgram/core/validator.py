@@ -1,47 +1,34 @@
 from django.core.exceptions import ValidationError
 from recipy.models import Ingredient, Tag
 
-def tags_exist_validator(tags_ids: list[int | str], Tag: 'Tag') -> None:
-    """Проверяет наличие тэгов с указанными id.
-
-    Args:
-        tags_ids (list[int | str]): Список id.
-        Tag (Tag): Модель тэгов во избежании цикличного импорта.
-
-    Raises:
-        ValidationError: Тэга с одним из указанных id не существует.
-    """
-    exists_tags = Tag.objects.filter(id__in=tags_ids)
-
-    if len(exists_tags) != len(tags_ids):
-        raise ValidationError('Указан несуществующий тэг')
+def tags_validator(tags_id, Tag: 'Tag'):
+    exists_tags = Tag.objects.filter(id__in=tags_id)
+    if len(exists_tags) != len(tags_id):
+        raise ValidationError('Такого тэга нет!')
     
 
-def ingredients_validator(
-    ingredients: list[dict[str, str | int]],
-    Ingredient: 'Ingredient',
-) -> dict[int, tuple['Ingredient', int]]:
+def ingredients_validator(ingredients, Ingredient: 'Ingredient'):
 
-    valid_ings = {}
+    ings = {}
 
     for ing in ingredients:
-        if not (isinstance(ing['amount'], int) or ing['amount'].isdigit()):
-            raise ValidationError('Неправильное количество ингидиента')
+        if not str(ing['amount']).isdigit():
+            raise ValidationError('Ингридиент должен быть числом!')
 
-        amount = valid_ings.get(ing['id'], 0) + int(ing['amount'])
+        amount = ings.get(ing['id'], 0) + int(ing['amount'])
         if amount <= 0:
             raise ValidationError('Неправильное количество ингридиента')
 
-        valid_ings[ing['id']] = amount
+        ings[ing['id']] = amount
 
-    if not valid_ings:
-        raise ValidationError('Неправильные ингидиенты')
+    if not ings:
+        raise ValidationError('Нужны ингридиенты!')
 
-    db_ings = Ingredient.objects.filter(pk__in=valid_ings.keys())
+    db_ings = Ingredient.objects.filter(pk__in=ings.keys())
     if not db_ings:
         raise ValidationError('Неправильные ингидиенты')
 
     for ing in db_ings:
-        valid_ings[ing.pk] = (ing, valid_ings[ing.pk])
+        ings[ing.pk] = (ing, ings[ing.pk])
 
-    return valid_ings
+    return ings

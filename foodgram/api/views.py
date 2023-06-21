@@ -1,34 +1,28 @@
 import datetime
 
-from django.shortcuts import HttpResponse, get_object_or_404
-from rest_framework import viewsets, pagination, status, generics
-from rest_framework.permissions import (AllowAny, IsAuthenticated,)
+from django.shortcuts import get_object_or_404
+from django.http import FileResponse
 
-from recipy.models import Ingredient, Recipy, Tag, User, Favorites, Cart, IngredientAmount
-from user.models import Follow
-from .serializers import (
-    TagSerializer,
-    RecipySerializer,
-    UserSerializer,
-    FollowSerializer,
-    IngredientSerializer,
-    FavoritesSerializer,
-    CartSerializer,
-    UserFollowSerializer
-)
-from .permissions import IsAuthorOrReadOnlyPermission, AdminOrReadOnly
+from rest_framework import decorators, generics, pagination, status, viewsets
+from rest_framework.permissions import (IsAuthenticated,
+                                        DjangoModelPermissions)
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import decorators
 
-
-METHODS = 'GET', 'POST', 'DELETE',
+from .permissions import AdminOrReadOnly, IsAuthorAdminOrReadOnlyPermission
+from .serializers import (CartSerializer, FavoritesSerializer,
+                          FollowSerializer, IngredientSerializer,
+                          RecipySerializer, TagSerializer,
+                          UserFollowSerializer, UserSerializer)
+from recipy.models import (Cart, Favorites, Ingredient, IngredientAmount,
+                           Recipy, Tag, User)
+from user.models import Follow
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [AllowAny, ]
+    permission_classes = [DjangoModelPermissions, ]
 
     @decorators.action(
         detail=False,
@@ -41,7 +35,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class FollowApiView(APIView):
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = (IsAuthorAdminOrReadOnlyPermission,)
 
     def post(self, request, following_id):
         user = request.user
@@ -67,10 +61,10 @@ class FollowApiView(APIView):
 
 
 class FollowListApiView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated, ]
     serializer_class = FollowSerializer
     pagination_class = pagination.PageNumberPagination
     pagination_class.page_size = 6
+    permission_classes = (IsAuthorAdminOrReadOnlyPermission,)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -85,14 +79,12 @@ class FollowListApiView(generics.ListAPIView):
 class RecipyViewSet(viewsets.ModelViewSet):
     queryset = Recipy.objects.select_related('author')
     serializer_class = RecipySerializer
-    permission_classes = (IsAuthorOrReadOnlyPermission,)
+    permission_classes = (IsAuthorAdminOrReadOnlyPermission,)
     pagination_class = pagination.PageNumberPagination
     pagination_class.page_size = 6
 
     def get_queryset(self):
-
         queryset = self.queryset
-
         author = self.request.query_params.get('author')
         tags = self.request.query_params.getlist('tags')
         in_cart = self.request.query_params.get('is_in_shopping_cart')
@@ -107,12 +99,11 @@ class RecipyViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(tags__slug__in=tags).distinct()
         else:
             queryset = queryset
-        return queryset  
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
@@ -120,13 +111,13 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (AdminOrReadOnly,)
 
 
-class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
+class IngredientView(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AdminOrReadOnly,)
 
 
-class FavoritesViewSet(APIView):
+class FavoritesView(APIView):
     permission_classes = [IsAuthenticated, ]
 
     def post(self, request, favorite_id):
@@ -150,19 +141,21 @@ class FavoritesViewSet(APIView):
         recipy = get_object_or_404(Recipy, id=favorite_id)
         Favorites.objects.filter(user=user, recipy=recipy).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
 
-class CartViewSet(APIView):
+
+class CartView(APIView):
     permission_classes = [IsAuthenticated, ]
-    
+
     def post(self, request, recipy_id):
         user = request.user
         data = {
             'recipy': recipy_id,
             'user': user.id
         }
-        serializer = CartSerializer(data=data,
-                                         context={'request': request})
+        serializer = CartSerializer(
+            data=data,
+            context={'request': request}
+        )
         if not serializer.is_valid():
             return Response(
                 serializer.errors,
@@ -176,7 +169,7 @@ class CartViewSet(APIView):
         recipy = get_object_or_404(Recipy, id=recipy_id)
         Cart.objects.filter(user=user, recipy=recipy).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
 
 class DownloadShoppingCart(APIView):
     permission_classes = [IsAuthenticated, ]
@@ -190,21 +183,27 @@ class DownloadShoppingCart(APIView):
         for ingredient in ingredients:
             amount = ingredient.amount
             name = ingredient.ingredients.name
-            units = ingredient.ingredients.units
+            measurement_unit = ingredient.ingredients.measurement_unit
             if name not in shopping_list:
                 shopping_list[name] = {
-                    'units': units,
+                    'measurement_unit': measurement_unit,
                     'amount': amount
                 }
             else:
                 shopping_list[name]['amount'] += amount
         user_shopping_list = ([
             f"{i + 1}. {item}: {value['amount']}"
-            f" {value['units']}\n" for i, (item, value) in enumerate(shopping_list.items())
+            f" {value['measurement_unit']}\n" for i, (
+                item, value
+            ) in enumerate(
+                shopping_list.items()
+            )
             ])
         today = datetime.date.today()
-        user_shopping_list.append(f'\nCreated with Foodgram by Samiel19, {today.year}')
-        response = HttpResponse(
+        user_shopping_list.append(
+            f'\nFoodgram by Samiel19, {today.strftime("%b-%d-%Y")}'
+            )
+        response = FileResponse(
             user_shopping_list, content_type='text.txt; charset=utf-8'
         )
         response['Content-Disposition'] = f'attachment; filename={filename}'

@@ -1,9 +1,8 @@
-from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinLengthValidator
+from django.db import models
 
 from foodgram.settings import MIN_LEN
-
 
 User = get_user_model()
 
@@ -35,13 +34,13 @@ class Tag(models.Model):
         ordering = ('name',)
 
     def __str__(self):
-        return  f'{self.name} {self.color}'
-    
+        return f'{self.name} {self.color}'
+
     def clean(self):
         self.name = self.name.strip().lower()
         self.slug = self.slug.strip().lower()
         return super().clean()
-    
+
 
 class Ingredient(models.Model):
     name = models.CharField(
@@ -49,7 +48,7 @@ class Ingredient(models.Model):
         max_length=64,
         validators=[MinLengthValidator(MIN_LEN)]
     )
-    units = models.CharField(
+    measurement_unit = models.CharField(
         verbose_name='Единицы измерения',
         max_length=64,
         validators=[MinLengthValidator(MIN_LEN)]
@@ -62,24 +61,23 @@ class Ingredient(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=('name', 'measurement_unit'),
-                name='unique_for_ingredient'
+                name='unique_ingredient'
                 ),
             ]
-            
 
     def __str__(self):
-        return f'{self.name} {self.units}'
-    
+        return f'{self.name} {self.measurement_unit}'
+
     def clean(self):
         self.name = self.name.strip().lower()
-        self.units = self.units.strip().lower()
+        self.measurement_unit = self.measurement_unit.strip().lower()
         return super().clean()
-    
+
 
 class Recipy(models.Model):
     name = models.CharField(
         verbose_name='Название блюда',
-        max_length = 64,
+        max_length=64,
         validators=[MinLengthValidator(MIN_LEN)]
     )
     author = models.ForeignKey(
@@ -118,7 +116,7 @@ class Recipy(models.Model):
         verbose_name='Время приготовления',
         default=0,
     )
-    
+
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
@@ -126,7 +124,6 @@ class Recipy(models.Model):
 
     def __str__(self):
         return f'{self.name}. Автор: {self.author.username}'
-
 
 
 class IngredientAmount(models.Model):

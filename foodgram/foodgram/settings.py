@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
-from django.core.validators import MinLengthValidator
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -119,14 +118,21 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
-    'HIDE_USERS': False,
     'PERMISSIONS': {
-        'recipy': ('api.permissions.IsAuthorOrReadOnlyPermission,',),
-        'recipy_list': ('api.permissions.IsAuthorOrReadOnlyPermission',),
+        'recipy': ('api.permissions.IsAuthorAdminOrReadOnlyPermission,',),
+        'recipy_list': ('api.permissions.IsAuthorAdminOrReadOnlyPermission',),
+        'password_reset_confirm': ('rest_framework.permissions.AllowAny',),
+        'set_password': ('djoser.permissions.CurrentUserOrAdmin',),
+        'set_username': ('djoser.permissions.CurrentUserOrAdmin',),
+        'user_create': ('rest_framework.permissions.AllowAny',),
+        'user_delete': ('djoser.permissions.CurrentUserOrAdmin',),
+        'token_create': ('rest_framework.permissions.AllowAny',),
+        'token_destroy': ('rest_framework.permissions.IsAuthenticated',),
     },
     'SERIALIZERS': {
         'token_create': 'api.serializers.CustomTokenCreateSerializer',
         'user': 'api.serializers.UserSerializer',
+        'current_user': 'api.serializers.UserSerializer',
         'user_list': 'api.serializers.UserSerializer',
         'current_user': 'api.serializers.UserSerializer',
         'user_create': 'api.serializers.UserSerializer',
@@ -166,4 +172,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 PASSWORD_RESET_TIMEOUT = 60 * 60
 
 
-MIN_LEN=1
+MIN_LEN = 1

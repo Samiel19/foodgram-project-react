@@ -2,11 +2,19 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
-
 class FoodgramUser(AbstractUser):
     email = models.EmailField('email', null=False, unique=True)
+    password = models.CharField(
+        verbose_name=('Пароль'),
+        max_length=150,
+        help_text='Пароль необходим!',
+    )
     username_field = 'email'
     required_fields = ['username', 'first_name', 'last_name']
+    is_active = models.BooleanField(
+        verbose_name='Активирован',
+        default=True,
+    )
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -15,8 +23,10 @@ class FoodgramUser(AbstractUser):
 
     def __str__(self):
         return f'Пользователь {self.email}'
-    
+
+
 User = FoodgramUser
+
 
 class Follow(models.Model):
     user = models.ForeignKey(
@@ -46,7 +56,6 @@ class Follow(models.Model):
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
         ordering = ('user', )
-
 
     def __str__(self):
         return f'{self.user} {self.following}'

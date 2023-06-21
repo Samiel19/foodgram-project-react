@@ -1,18 +1,20 @@
-from api.views import (IngredientViewSet, RecipyViewSet,
-                       TagViewSet, UserViewSet, FavoritesViewSet, CartViewSet, FollowListApiView, FollowApiView, DownloadShoppingCart
-                       )
-from django.urls import include, path
-from django.contrib import admin
-from django.conf.urls.static import static
-from rest_framework.routers import DefaultRouter
 from django.conf import settings
+from django.conf.urls.static import static
+from django.urls import include, path
+
+from rest_framework.routers import DefaultRouter
+
+from api.views import (CartView, DownloadShoppingCart, FavoritesView,
+                       FollowApiView, FollowListApiView, IngredientView,
+                       RecipyViewSet, TagViewSet, UserViewSet)
 
 app_name = 'api'
 
 router = DefaultRouter()
 
+router.register(r'users', UserViewSet)
 router.register(r'tags', TagViewSet)
-router.register(r'ingredients', IngredientViewSet)
+router.register(r'ingredients', IngredientView)
 router.register(r'recipes', RecipyViewSet)
 
 urlpatterns = [
@@ -21,9 +23,9 @@ urlpatterns = [
     path('recipes/download_shopping_cart/', DownloadShoppingCart.as_view()),
     path('', include(router.urls)),
     path('', include('djoser.urls')),
-    path('recipes/<int:favorite_id>/favorite/', FavoritesViewSet.as_view()),
-    path('recipes/<int:recipy_id>/shopping_cart/', CartViewSet.as_view()),
     path('auth/', include('djoser.urls.authtoken')),
+    path('recipes/<int:favorite_id>/favorite/', FavoritesView.as_view()),
+    path('recipes/<int:recipy_id>/shopping_cart/', CartView.as_view()),
 ]
 
 if settings.DEBUG:

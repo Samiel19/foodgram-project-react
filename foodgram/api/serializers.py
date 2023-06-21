@@ -1,20 +1,21 @@
 import base64
 
+
 from django.contrib.auth import authenticate
+from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import models, transaction
-from django.core.exceptions import ValidationError
-from recipy.models import Ingredient, Recipy, Tag, User, Favorites, Cart
-from user.models import Follow
-from rest_framework import serializers, exceptions
-from rest_framework.validators import UniqueTogetherValidator
-from djoser.serializers import TokenCreateSerializer
 
 from djoser.conf import settings
-from core.validator import tags_validator, ingredients_validator
+from djoser.serializers import TokenCreateSerializer
+
+from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
+
 from core.service import ingredient_amount
-
-
+from core.validator import ingredients_validator, tags_validator
+from recipy.models import Cart, Favorites, Ingredient, Recipy, Tag, User
+from user.models import Follow
 
 
 class CustomTokenCreateSerializer(TokenCreateSerializer):
@@ -32,7 +33,6 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
             return attrs
         self.fail("invalid_credentials")
 
-    
 
 class UserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
@@ -50,7 +50,7 @@ class UserSerializer(serializers.ModelSerializer):
         )
         extra_kwargs = {'password': {'write_only': True}}
         read_only_fields = 'is_subscribed',
-    
+
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
         if user.is_anonymous or (user == obj):
@@ -67,10 +67,9 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
-    
+
 
 class UserFollowSerializer(serializers.ModelSerializer):
-
     following = serializers.SlugRelatedField(
         slug_field='id',
         queryset=User.objects.all(),
@@ -106,7 +105,7 @@ class UserFollowSerializer(serializers.ModelSerializer):
             instance.following,
             context={'request': request}
         ).data
-    
+
 
 class FollowSerializer(serializers.ModelSerializer):
     recipes = serializers.SerializerMethodField()
@@ -190,7 +189,6 @@ class RecipySerializer(serializers.ModelSerializer):
             'cooking_time',
         )
 
-
     def validate(self, data):
         tags_id = self.initial_data.get('tags')
         ingredients = self.initial_data.get('ingredients')
@@ -205,15 +203,11 @@ class RecipySerializer(serializers.ModelSerializer):
         })
         return data
 
-
     def get_ingredients(self, recipy):
         ingredients = recipy.ingredients.values(
-            'id', 'name', 'units', amount=models.F('recipy__amount')
+            'id', 'name', 'measurement_unit', amount=models.F('recipy__amount')
         )
         return ingredients
-
-
-
 
     @transaction.atomic
     def create(self, validated_data):
@@ -223,7 +217,6 @@ class RecipySerializer(serializers.ModelSerializer):
         recipy.tags.set(tags)
         ingredient_amount(recipy, ingredients)
         return recipy
-
 
     @transaction.atomic
     def update(self, recipy, validated_data):
@@ -241,7 +234,6 @@ class RecipySerializer(serializers.ModelSerializer):
             print(ingredients)
         recipy.save()
         return recipy
-    
 
     def get_is_favorited(self, recipy):
         request = self.context.get('request')
@@ -276,7 +268,7 @@ class FavoritesSerializer(serializers.ModelSerializer):
             instance.recipy,
             context={'request': requset}
         ).data
-    
+
 
 class CartSerializer(serializers.ModelSerializer):
     class Meta:

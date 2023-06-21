@@ -117,17 +117,19 @@ REST_FRAMEWORK = {
 
 
 DJOSER = {
+    'HIDE_USERS': False,
     'LOGIN_FIELD': 'email',
     'PERMISSIONS': {
-        'recipy': ('api.permissions.IsAuthorAdminOrReadOnlyPermission,',),
-        'recipy_list': ('api.permissions.IsAuthorAdminOrReadOnlyPermission',),
+        'user': ['api.permissions.IsAuthorAdminOrReadOnlyPermission'],
+        'recipy': ['api.permissions.IsAuthorAdminOrReadOnlyPermission'],
+        'recipy_list': ['api.permissions.IsAuthorAdminOrReadOnlyPermission'],
         'password_reset_confirm': ('rest_framework.permissions.AllowAny',),
-        'set_password': ('djoser.permissions.CurrentUserOrAdmin',),
-        'set_username': ('djoser.permissions.CurrentUserOrAdmin',),
-        'user_create': ('rest_framework.permissions.AllowAny',),
-        'user_delete': ('djoser.permissions.CurrentUserOrAdmin',),
-        'token_create': ('rest_framework.permissions.AllowAny',),
-        'token_destroy': ('rest_framework.permissions.IsAuthenticated',),
+        'set_password': ['djoser.permissions.CurrentUserOrAdmin'],
+        'set_username': ['djoser.permissions.CurrentUserOrAdmin'],
+        'user_create': ['rest_framework.permissions.AllowAny'],
+        'user_delete': ['djoser.permissions.CurrentUserOrAdmin'],
+        'token_create': ['rest_framework.permissions.AllowAny'],
+        'token_destroy': ['rest_framework.permissions.IsAuthenticated'],
     },
     'SERIALIZERS': {
         'token_create': 'api.serializers.CustomTokenCreateSerializer',
@@ -172,4 +174,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 PASSWORD_RESET_TIMEOUT = 60 * 60
 
 
-MIN_LEN = 1
+BANNED_SYMBOLS = r'^[\w.@+-]+$'

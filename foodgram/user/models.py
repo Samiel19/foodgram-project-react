@@ -1,20 +1,55 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 from django.db import models
+
+from foodgram.settings import BANNED_SYMBOLS
 
 
 class FoodgramUser(AbstractUser):
-    email = models.EmailField('email', null=False, unique=True)
+    email = models.EmailField(
+        verbose_name='email',
+        null=False,
+        unique=True,
+        max_length=254
+    )
     password = models.CharField(
-        verbose_name=('Пароль'),
+        verbose_name='Пароль',
+        null=False,
         max_length=150,
         help_text='Пароль необходим!',
     )
-    username_field = 'email'
-    required_fields = ['username', 'first_name', 'last_name']
+    username = models.CharField(
+        verbose_name='Уникальный юзернейм',
+        max_length=150,
+        unique=True,
+        null=False,
+        help_text='Юзернейм',
+        validators=[
+            RegexValidator(
+                regex=BANNED_SYMBOLS,
+                message='Имя пользователя должно состоять из букв и цифр',
+                code='Invalid_username'
+            ),
+        ]
+    )
     is_active = models.BooleanField(
         verbose_name='Активирован',
+        null=False,
         default=True,
     )
+    first_name = models.CharField(
+        verbose_name='Имя',
+        null=False,
+        max_length=150,
+        help_text='Имя пользователя',
+    )
+    last_name = models.CharField(
+        null=False,
+        verbose_name='Фамилия',
+        max_length=150,
+        help_text='Фамилия пользователя',
+    )
+    username_field = 'email'
 
     class Meta:
         verbose_name = 'Пользователь'

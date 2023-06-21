@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinLengthValidator
 from django.db import models
 
-from foodgram.settings import MIN_LEN
 
 User = get_user_model()
 
@@ -12,7 +11,7 @@ class Tag(models.Model):
         verbose_name='Тэг',
         max_length=64,
         unique=True,
-        validators=[MinLengthValidator(MIN_LEN)]
+        null=False
     )
     color = models.CharField(
         verbose_name='Цвет',
@@ -25,7 +24,7 @@ class Tag(models.Model):
         verbose_name='Слаг',
         max_length=64,
         unique=True,
-        validators=[MinLengthValidator(MIN_LEN)]
+        null=False
     )
 
     class Meta:
@@ -46,12 +45,12 @@ class Ingredient(models.Model):
     name = models.CharField(
         verbose_name='Ингридиент',
         max_length=64,
-        validators=[MinLengthValidator(MIN_LEN)]
+        null=False
     )
     measurement_unit = models.CharField(
         verbose_name='Единицы измерения',
         max_length=64,
-        validators=[MinLengthValidator(MIN_LEN)]
+        null=False
     )
 
     class Meta:
@@ -78,7 +77,7 @@ class Recipy(models.Model):
     name = models.CharField(
         verbose_name='Название блюда',
         max_length=64,
-        validators=[MinLengthValidator(MIN_LEN)]
+        null=False
     )
     author = models.ForeignKey(
         User,
@@ -109,8 +108,8 @@ class Recipy(models.Model):
     )
     text = models.TextField(
         verbose_name='Описание блюда',
-        max_length=500,
-        validators=[MinLengthValidator(MIN_LEN)]
+        max_length=1000,
+        null=False
     )
     cooking_time = models.PositiveIntegerField(
         verbose_name='Время приготовления',

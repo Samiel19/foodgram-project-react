@@ -3,9 +3,8 @@ import datetime
 from django.shortcuts import get_object_or_404
 from django.http import FileResponse
 
-from rest_framework import decorators, generics, pagination, status, viewsets
-from rest_framework.permissions import (IsAuthenticated,
-                                        DjangoModelPermissions)
+from rest_framework import generics, pagination, status, viewsets
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -13,25 +12,10 @@ from .permissions import AdminOrReadOnly, IsAuthorAdminOrReadOnlyPermission
 from .serializers import (CartSerializer, FavoritesSerializer,
                           FollowSerializer, IngredientSerializer,
                           RecipySerializer, TagSerializer,
-                          UserFollowSerializer, UserSerializer)
+                          UserFollowSerializer)
 from recipy.models import (Cart, Favorites, Ingredient, IngredientAmount,
                            Recipy, Tag, User)
 from user.models import Follow
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [DjangoModelPermissions, ]
-
-    @decorators.action(
-        detail=False,
-        methods=['get'],
-        permission_classes=(IsAuthenticated, )
-    )
-    def me(self, request):
-        serializer = self.get_serializer(self.request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class FollowApiView(APIView):

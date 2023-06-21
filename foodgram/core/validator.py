@@ -13,7 +13,7 @@ def ingredients_validator(ingredients, Ingredient: 'Ingredient'):
     validated_ingredients = {}
     for ing in ingredients:
         if not str(ing['amount']).isdigit():
-            raise ValidationError('Ингридиент должен быть числом!')
+            raise ValidationError('Количество измеряется в числах!')
         amount = validated_ingredients.get(ing['id'], 0) + int(ing['amount'])
         if amount <= 0:
             raise ValidationError('Неправильное количество ингридиента')

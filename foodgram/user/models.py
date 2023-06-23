@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
 
-from foodgram.settings import BANNED_SYMBOLS
+from foodgram.settings import BANNED_SYMBOLS, USER_MODEL_MAX_LEN, EMAIL_MAX_LEN
 
 
 class FoodgramUser(AbstractUser):
@@ -10,17 +10,17 @@ class FoodgramUser(AbstractUser):
         verbose_name='email',
         null=False,
         unique=True,
-        max_length=254
+        max_length=EMAIL_MAX_LEN
     )
     password = models.CharField(
         verbose_name='Пароль',
         null=False,
-        max_length=150,
+        max_length=USER_MODEL_MAX_LEN,
         help_text='Пароль необходим!',
     )
     username = models.CharField(
         verbose_name='Уникальный юзернейм',
-        max_length=150,
+        max_length=USER_MODEL_MAX_LEN,
         unique=True,
         null=False,
         help_text='Юзернейм',
@@ -40,13 +40,13 @@ class FoodgramUser(AbstractUser):
     first_name = models.CharField(
         verbose_name='Имя',
         null=False,
-        max_length=150,
+        max_length=USER_MODEL_MAX_LEN,
         help_text='Имя пользователя',
     )
     last_name = models.CharField(
         null=False,
         verbose_name='Фамилия',
-        max_length=150,
+        max_length=USER_MODEL_MAX_LEN,
         help_text='Фамилия пользователя',
     )
     username_field = 'email'

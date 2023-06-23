@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 
-from recipy.models import Ingredient, Tag
+from recipe.models import Ingredient, Tag
 
 
 def tags_validator(tags_id, Tag: 'Tag'):

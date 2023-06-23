@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinLengthValidator
 from django.db import models
 
+from foodgram.settings import RECIPE_MODEL_MAX_LEN
+
 
 User = get_user_model()
 
@@ -9,7 +11,7 @@ User = get_user_model()
 class Tag(models.Model):
     name = models.CharField(
         verbose_name='Тэг',
-        max_length=64,
+        max_length=RECIPE_MODEL_MAX_LEN,
         unique=True,
         null=False
     )
@@ -22,7 +24,7 @@ class Tag(models.Model):
     )
     slug = models.CharField(
         verbose_name='Слаг',
-        max_length=64,
+        max_length=RECIPE_MODEL_MAX_LEN,
         unique=True,
         null=False
     )
@@ -73,27 +75,24 @@ class Ingredient(models.Model):
         return super().clean()
 
 
-class Recipy(models.Model):
+class Recipe(models.Model):
     name = models.CharField(
         verbose_name='Название блюда',
-        max_length=64,
+        max_length=RECIPE_MODEL_MAX_LEN,
         null=False
     )
     author = models.ForeignKey(
         User,
         verbose_name='Автор рецепта',
-        related_name='recipes',
         on_delete=models.SET_NULL,
         null=True,
     )
     tags = models.ManyToManyField(
         Tag,
-        related_name='recipes',
         verbose_name='Тег',
     )
     ingredients = models.ManyToManyField(
         Ingredient,
-        related_name='recipes',
         verbose_name='Ингридиенты',
         through='IngredientAmount',
     )
@@ -108,7 +107,6 @@ class Recipy(models.Model):
     )
     text = models.TextField(
         verbose_name='Описание блюда',
-        max_length=1000,
         null=False
     )
     cooking_time = models.PositiveIntegerField(
@@ -117,6 +115,7 @@ class Recipy(models.Model):
     )
 
     class Meta:
+        default_related_name = 'recipes'
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ('-pub_date', )
@@ -126,16 +125,16 @@ class Recipy(models.Model):
 
 
 class IngredientAmount(models.Model):
-    recipy = models.ForeignKey(
-        Recipy,
+    recipe = models.ForeignKey(
+        Recipe,
         verbose_name='В каких блюдах',
-        related_name='ingredients_in_recipy',
+        related_name='ingredients_in_recipe',
         on_delete=models.CASCADE,
     )
     ingredients = models.ForeignKey(
         Ingredient,
         verbose_name='Связанные ингредиенты',
-        related_name='recipy',
+        related_name='recipe',
         on_delete=models.CASCADE,
     )
     amount = models.PositiveIntegerField(
@@ -146,10 +145,10 @@ class IngredientAmount(models.Model):
     class Meta:
         verbose_name = 'Ингридиент'
         verbose_name_plural = 'Количество ингридиентов'
-        ordering = ('recipy', )
+        ordering = ('recipe', )
         constraints = [
             models.UniqueConstraint(
-                fields=('recipy', 'ingredients', ),
+                fields=('recipe', 'ingredients', ),
                 name='Это уже добавили!',
             ),
         ]
@@ -159,16 +158,14 @@ class IngredientAmount(models.Model):
 
 
 class Cart(models.Model):
-    recipy = models.ForeignKey(
-        Recipy,
+    recipe = models.ForeignKey(
+        Recipe,
         verbose_name='Рецепты в корзине',
-        related_name='in_cart',
         on_delete=models.CASCADE,
     )
     user = models.ForeignKey(
         User,
         verbose_name='Это список пользователя',
-        related_name='cart',
         on_delete=models.CASCADE,
     )
     add_date = models.DateTimeField(
@@ -178,30 +175,29 @@ class Cart(models.Model):
     )
 
     class Meta:
+        default_related_name = 'in_cart'
         constraints = [
-            models.UniqueConstraint(fields=['user', 'recipy'],
+            models.UniqueConstraint(fields=['user', 'recipe'],
                                     name='unique_cart'),
         ]
         verbose_name = 'Рецепт в корзине'
         verbose_name_plural = 'Рецепты в корзине'
-        ordering = ('recipy', )
+        ordering = ('recipe', )
 
     def __str__(self):
-        return f'{self.user}: {self.recipy}'
+        return f'{self.user}: {self.recipe}'
 
 
 class Favorites(models.Model):
-    recipy = models.ForeignKey(
-        Recipy,
+    recipe = models.ForeignKey(
+        Recipe,
         verbose_name='Избранные рецепты',
         on_delete=models.CASCADE,
-        related_name='favorite_recipy',
     )
     user = models.ForeignKey(
         User,
         verbose_name='Пользователь',
         on_delete=models.CASCADE,
-        related_name='favorites',
     )
     date_added = models.DateTimeField(
         verbose_name='Дата добавления',
@@ -210,12 +206,13 @@ class Favorites(models.Model):
     )
 
     class Meta:
+        default_related_name = 'favorite_recipe'
         constraints = [
-            models.UniqueConstraint(fields=['user', 'recipy'],
+            models.UniqueConstraint(fields=['user', 'recipe'],
                                     name='unique_favorite'),
         ]
         verbose_name = 'Избранный рецепт'
         verbose_name_plural = 'Избранные рецепты'
 
     def __str__(self) -> str:
-        return f'{self.user}: {self.recipy}'
+        return f'{self.user}: {self.recipe}'

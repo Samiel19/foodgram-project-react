@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Cart, Favorites, Ingredient, IngredientAmount, Recipy, Tag
+from .models import Cart, Favorites, Ingredient, IngredientAmount, Recipe, Tag
 
 
 class IngredientInline(admin.TabularInline):
@@ -18,7 +18,7 @@ class IngredientAdmin(admin.ModelAdmin):
     list_filter = ('name',)
 
 
-class RecipyAdmin(admin.ModelAdmin):
+class RecipeAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'author',
@@ -32,10 +32,10 @@ class RecipyAdmin(admin.ModelAdmin):
     inlines = (IngredientInline,)
 
     def is_favorited(self, obj):
-        return obj.favorite_recipy.count()
+        return obj.favorite_recipe.count()
 
 
-admin.site.register(Recipy, RecipyAdmin)
+admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(IngredientAmount)
 admin.site.register(Tag)

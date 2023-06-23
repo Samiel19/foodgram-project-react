@@ -6,7 +6,7 @@ from rest_framework.routers import DefaultRouter
 
 from api.views import (CartView, DownloadShoppingCart, FavoritesView,
                        FollowApiView, FollowListApiView, IngredientView,
-                       RecipyViewSet, TagViewSet,)
+                       RecipeViewSet, TagViewSet,)
 
 app_name = 'api'
 
@@ -14,14 +14,14 @@ router = DefaultRouter()
 
 router.register(r'tags', TagViewSet)
 router.register(r'ingredients', IngredientView)
-router.register(r'recipes', RecipyViewSet)
+router.register(r'recipes', RecipeViewSet)
 
 urlpatterns = [
     path('users/subscriptions/', FollowListApiView.as_view()),
     path('users/<int:following_id>/subscribe/', FollowApiView.as_view()),
     path('recipes/download_shopping_cart/', DownloadShoppingCart.as_view()),
     path('recipes/<int:favorite_id>/favorite/', FavoritesView.as_view()),
-    path('recipes/<int:recipy_id>/shopping_cart/', CartView.as_view()),
+    path('recipes/<int:recipe_id>/shopping_cart/', CartView.as_view()),
     path('auth/', include('djoser.urls.authtoken')),
     path('', include(router.urls)),
     path('', include('djoser.urls')),

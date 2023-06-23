@@ -14,7 +14,7 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from core.service import ingredient_amount
 from core.validator import ingredients_validator, tags_validator
-from recipy.models import Cart, Favorites, Ingredient, Recipy, Tag, User
+from recipe.models import Cart, Favorites, Ingredient, Recipe, Tag, User
 from user.models import Follow
 
 
@@ -133,7 +133,7 @@ class FollowSerializer(serializers.ModelSerializer):
     def get_recipes(self, obj):
         recipes = obj.recipes.all()[:3]
         request = self.context.get('request')
-        return RecipySerializer(
+        return RecipeSerializer(
             recipes, many=True,
             context={'request': request}
         ).data
@@ -166,7 +166,7 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
-class RecipySerializer(serializers.ModelSerializer):
+class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     author = UserSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField()
@@ -175,7 +175,7 @@ class RecipySerializer(serializers.ModelSerializer):
     image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
-        model = Recipy
+        model = Recipe
         fields = (
             'id',
             'tags',
@@ -203,9 +203,9 @@ class RecipySerializer(serializers.ModelSerializer):
         })
         return data
 
-    def get_ingredients(self, recipy):
-        ingredients = recipy.ingredients.values(
-            'id', 'name', 'measurement_unit', amount=models.F('recipy__amount')
+    def get_ingredients(self, recipe):
+        ingredients = recipe.ingredients.values(
+            'id', 'name', 'measurement_unit', amount=models.F('recipe__amount')
         )
         return ingredients
 
@@ -213,78 +213,78 @@ class RecipySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        recipy = Recipy.objects.create(**validated_data)
-        recipy.tags.set(tags)
-        ingredient_amount(recipy, ingredients)
-        return recipy
+        recipe = Recipe.objects.create(**validated_data)
+        recipe.tags.set(tags)
+        ingredient_amount(recipe, ingredients)
+        return recipe
 
     @transaction.atomic
-    def update(self, recipy, validated_data):
+    def update(self, recipe, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         for key, value in validated_data.items():
-            if hasattr(recipy, key):
-                setattr(recipy, key, value)
+            if hasattr(recipe, key):
+                setattr(recipe, key, value)
         if tags:
-            recipy.tags.clear()
-            recipy.tags.set(tags)
+            recipe.tags.clear()
+            recipe.tags.set(tags)
         if ingredients:
-            recipy.ingredients.clear()
-            ingredient_amount(recipy, ingredients)
+            recipe.ingredients.clear()
+            ingredient_amount(recipe, ingredients)
             print(ingredients)
-        recipy.save()
-        return recipy
+        recipe.save()
+        return recipe
 
-    def get_is_favorited(self, recipy):
+    def get_is_favorited(self, recipe):
         request = self.context.get('request')
         if request is None or request.user.is_anonymous:
             return False
         user = request.user
-        return Favorites.objects.filter(recipy=recipy, user=user).exists()
+        return Favorites.objects.filter(recipe=recipe, user=user).exists()
 
-    def get_is_in_shopping_cart(self, recipy):
+    def get_is_in_shopping_cart(self, recipe):
         request = self.context.get('request')
         if request is None or request.user.is_anonymous:
             return False
         user = request.user
-        return Cart.objects.filter(recipy=recipy, user=user).exists()
+        return Cart.objects.filter(recipe=recipe, user=user).exists()
 
 
 class FavoritesSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('user', 'recipy')
+        fields = ('user', 'recipe')
         model = Favorites
         validators = [
             UniqueTogetherValidator(
                 queryset=Favorites.objects.all(),
-                fields=('user', 'recipy'),
+                fields=('user', 'recipe'),
                 message='Рецепт уже добавлен в избранное'
             )
         ]
 
     def to_representation(self, instance):
         requset = self.context.get('request')
-        return RecipySerializer(
-            instance.recipy,
+        return RecipeSerializer(
+            instance.recipe,
             context={'request': requset}
         ).data
 
 
 class CartSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('user', 'recipy')
+        fields = ('user', 'recipe')
         model = Cart
         validators = [
             UniqueTogetherValidator(
                 queryset=Cart.objects.all(),
-                fields=('user', 'recipy'),
+                fields=('user', 'recipe'),
                 message='Рецепт уже добавлен в корзину'
             )
         ]
 
     def to_representation(self, instance):
         requset = self.context.get('request')
-        return RecipySerializer(
-            instance.recipy,
+        return RecipeSerializer(
+            instance.recipe,
             context={'request': requset}
         ).data

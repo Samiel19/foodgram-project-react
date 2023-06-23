@@ -11,10 +11,10 @@ from rest_framework.views import APIView
 from .permissions import AdminOrReadOnly, IsAuthorAdminOrReadOnlyPermission
 from .serializers import (CartSerializer, FavoritesSerializer,
                           FollowSerializer, IngredientSerializer,
-                          RecipySerializer, TagSerializer,
+                          RecipeSerializer, TagSerializer,
                           UserFollowSerializer)
-from recipy.models import (Cart, Favorites, Ingredient, IngredientAmount,
-                           Recipy, Tag, User)
+from recipe.models import (Cart, Favorites, Ingredient, IngredientAmount,
+                           Recipe, Tag, User)
 from user.models import Follow
 
 
@@ -60,9 +60,9 @@ class FollowListApiView(generics.ListAPIView):
         return User.objects.filter(following__user=user)
 
 
-class RecipyViewSet(viewsets.ModelViewSet):
-    queryset = Recipy.objects.select_related('author')
-    serializer_class = RecipySerializer
+class RecipeViewSet(viewsets.ModelViewSet):
+    queryset = Recipe.objects.select_related('author')
+    serializer_class = RecipeSerializer
     permission_classes = (IsAuthorAdminOrReadOnlyPermission,)
     pagination_class = pagination.PageNumberPagination
     pagination_class.page_size = 6
@@ -74,7 +74,7 @@ class RecipyViewSet(viewsets.ModelViewSet):
         in_cart = self.request.query_params.get('is_in_shopping_cart')
         is_favorite = self.request.query_params.get('is_favorited')
         if is_favorite:
-            queryset = queryset.filter(favorite_recipy__user=self.request.user)
+            queryset = queryset.filter(favorite_recipe__user=self.request.user)
         if in_cart:
             queryset = queryset.filter(in_cart__user=self.request.user)
         if author:
@@ -107,7 +107,7 @@ class FavoritesView(APIView):
     def post(self, request, favorite_id):
         user = request.user
         data = {
-            'recipy': favorite_id,
+            'recipe': favorite_id,
             'user': user.id
         }
         serializer = FavoritesSerializer(data=data,
@@ -122,18 +122,18 @@ class FavoritesView(APIView):
 
     def delete(self, request, favorite_id):
         user = request.user
-        recipy = get_object_or_404(Recipy, id=favorite_id)
-        Favorites.objects.filter(user=user, recipy=recipy).delete()
+        recipe = get_object_or_404(Recipe, id=favorite_id)
+        Favorites.objects.filter(user=user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CartView(APIView):
     permission_classes = [IsAuthenticated, ]
 
-    def post(self, request, recipy_id):
+    def post(self, request, recipe_id):
         user = request.user
         data = {
-            'recipy': recipy_id,
+            'recipe': recipe_id,
             'user': user.id
         }
         serializer = CartSerializer(
@@ -148,10 +148,10 @@ class CartView(APIView):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def delete(self, request, recipy_id):
+    def delete(self, request, recipe_id):
         user = request.user
-        recipy = get_object_or_404(Recipy, id=recipy_id)
-        Cart.objects.filter(user=user, recipy=recipy).delete()
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        Cart.objects.filter(user=user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -162,7 +162,7 @@ class DownloadShoppingCart(APIView):
         shopping_list = {}
         filename = f'{request.user.username}_shopping_list.txt'
         ingredients = IngredientAmount.objects.filter(
-            recipy__in_cart__user=request.user
+            recipe__in_cart__user=request.user
         )
         for ingredient in ingredients:
             amount = ingredient.amount

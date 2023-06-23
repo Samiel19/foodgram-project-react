@@ -1,11 +1,11 @@
-from recipy.models import IngredientAmount
+from recipe.models import IngredientAmount
 
 
-def ingredient_amount(recipy, ingredients):
+def ingredient_amount(recipe, ingredients):
     ingredient_amount = []
     for ingredient, amount in ingredients.values():
         ingredient_amount.append(IngredientAmount(
-            recipy=recipy,
+            recipe=recipe,
             ingredients=ingredient,
             amount=amount
         ))

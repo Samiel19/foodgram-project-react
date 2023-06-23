@@ -182,11 +182,11 @@ class DownloadShoppingCart(APIView):
             ) in enumerate(
                 shopping_list.items()
             )
-            ])
+        ])
         today = datetime.date.today()
         user_shopping_list.append(
             f'\nFoodgram by Samiel19, {today.strftime("%b-%d-%Y")}'
-            )
+        )
         response = FileResponse(
             user_shopping_list, content_type='text.txt; charset=utf-8'
         )

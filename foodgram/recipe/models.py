@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinLengthValidator
 from django.db import models
 
-from foodgram.settings import RECIPE_MODEL_MAX_LEN
+from foodgram.settings import RECIPE_MODEL_MAX_LEN, HEX_LEN
 
 
 User = get_user_model()
@@ -18,7 +18,7 @@ class Tag(models.Model):
     color = models.CharField(
         verbose_name='Цвет',
         default='#0000FF',
-        max_length=7,
+        max_length=HEX_LEN,
         unique=True,
         validators=[MinLengthValidator(7)]
     )
@@ -46,12 +46,12 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     name = models.CharField(
         verbose_name='Ингридиент',
-        max_length=64,
+        max_length=RECIPE_MODEL_MAX_LEN,
         null=False
     )
     measurement_unit = models.CharField(
         verbose_name='Единицы измерения',
-        max_length=64,
+        max_length=RECIPE_MODEL_MAX_LEN,
         null=False
     )
 
@@ -63,8 +63,8 @@ class Ingredient(models.Model):
             models.UniqueConstraint(
                 fields=('name', 'measurement_unit'),
                 name='unique_ingredient'
-                ),
-            ]
+            ),
+        ]
 
     def __str__(self):
         return f'{self.name} {self.measurement_unit}'

@@ -13,5 +13,5 @@ class FoodgramUserAdmin(UserAdmin):
     list_filter = ('username', 'email',)
 
 
-admin.site.register(FoodgramUser,  FoodgramUserAdmin)
+admin.site.register(FoodgramUser, FoodgramUserAdmin)
 admin.site.register(Follow)

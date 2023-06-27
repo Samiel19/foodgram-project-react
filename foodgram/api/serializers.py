@@ -12,8 +12,11 @@ from djoser.serializers import TokenCreateSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from core.service import ingredient_amount
-from core.validator import ingredients_validator, tags_validator
+from recipe.service import (
+    ingredients_validator,
+    ingredient_amount,
+    tags_validator
+)
 from recipe.models import Cart, Favorites, Ingredient, Recipe, Tag, User
 from user.models import Follow
 
@@ -190,14 +193,14 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        tags_id = self.initial_data.get('tags')
+        tags = self.initial_data.get('tags')
         ingredients = self.initial_data.get('ingredients')
-        if not tags_id or not ingredients:
+        if not tags or not ingredients:
             raise ValidationError('Недостаточно данных.')
-        tags_validator(tags_id, Tag)
+        tags_validator(tags, Tag)
         ingredients = ingredients_validator(ingredients, Ingredient)
         data.update({
-            'tags': tags_id,
+            'tags': tags,
             'ingredients': ingredients,
             'author': self.context.get('request').user
         })
@@ -213,7 +216,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(**validated_data)
+        recipe = Recipe.recipes.create(**validated_data)
         recipe.tags.set(tags)
         ingredient_amount(recipe, ingredients)
         return recipe
@@ -231,7 +234,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         if ingredients:
             recipe.ingredients.clear()
             ingredient_amount(recipe, ingredients)
-            print(ingredients)
         recipe.save()
         return recipe
 
@@ -263,10 +265,9 @@ class FavoritesSerializer(serializers.ModelSerializer):
         ]
 
     def to_representation(self, instance):
-        requset = self.context.get('request')
         return RecipeSerializer(
             instance.recipe,
-            context={'request': requset}
+            context={'request': self.context.get('request')}
         ).data
 
 
@@ -283,8 +284,7 @@ class CartSerializer(serializers.ModelSerializer):
         ]
 
     def to_representation(self, instance):
-        requset = self.context.get('request')
         return RecipeSerializer(
             instance.recipe,
-            context={'request': requset}
+            context={'request': self.context.get('request')}
         ).data

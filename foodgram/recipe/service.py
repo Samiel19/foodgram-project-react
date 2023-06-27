@@ -1,6 +1,17 @@
 from django.core.exceptions import ValidationError
 
-from recipe.models import Ingredient, Tag
+from recipe.models import Ingredient, IngredientAmount, Tag
+
+
+def ingredient_amount(recipe, ingredients):
+    ingredient_amount = []
+    for ingredient, amount in ingredients.values():
+        ingredient_amount.append(IngredientAmount(
+            recipe=recipe,
+            ingredients=ingredient,
+            amount=amount
+        ))
+    IngredientAmount.objects.bulk_create(ingredient_amount)
 
 
 def tags_validator(tags_id, Tag: 'Tag'):

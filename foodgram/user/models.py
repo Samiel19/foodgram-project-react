@@ -24,6 +24,7 @@ class FoodgramUser(AbstractUser):
         unique=True,
         null=False,
         help_text='Юзернейм',
+        db_index=True,
         validators=[
             RegexValidator(
                 regex=BANNED_SYMBOLS,

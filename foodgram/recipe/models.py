@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MinLengthValidator
+from django.core.validators import MinLengthValidator, MinValueValidator
 from django.db import models
 
 from foodgram.settings import RECIPE_MODEL_MAX_LEN, HEX_LEN
@@ -8,12 +8,34 @@ from foodgram.settings import RECIPE_MODEL_MAX_LEN, HEX_LEN
 User = get_user_model()
 
 
+class RecipyQuerySet(models.QuerySet):
+    def recipe_filter(
+            self,
+            user,
+            is_favorite,
+            in_cart,
+            author,
+            tags
+            ):
+        if is_favorite:
+            return self.filter(favorite_recipe__user=user)
+        if in_cart:
+            return self.filter(in_cart__user=user)
+        if author:
+            return self.filter(author=author)
+        if tags:
+            return self.filter(tags__slug__in=tags).distinct()
+        else:
+            return self
+
+
 class Tag(models.Model):
     name = models.CharField(
         verbose_name='Тэг',
         max_length=RECIPE_MODEL_MAX_LEN,
         unique=True,
-        null=False
+        null=False,
+        db_index=True,
     )
     color = models.CharField(
         verbose_name='Цвет',
@@ -69,23 +91,20 @@ class Ingredient(models.Model):
     def __str__(self):
         return f'{self.name} {self.measurement_unit}'
 
-    def clean(self):
-        self.name = self.name.strip().lower()
-        self.measurement_unit = self.measurement_unit.strip().lower()
-        return super().clean()
-
 
 class Recipe(models.Model):
     name = models.CharField(
         verbose_name='Название блюда',
         max_length=RECIPE_MODEL_MAX_LEN,
-        null=False
+        null=False,
+        db_index=True,
     )
     author = models.ForeignKey(
         User,
         verbose_name='Автор рецепта',
         on_delete=models.SET_NULL,
         null=True,
+        db_index=True,
     )
     tags = models.ManyToManyField(
         Tag,
@@ -96,7 +115,7 @@ class Recipe(models.Model):
         verbose_name='Ингридиенты',
         through='IngredientAmount',
     )
-    pub_date = models.DateTimeField(
+    created_at = models.DateTimeField(
         verbose_name='Дата публикации',
         auto_now_add=True,
         editable=False,
@@ -111,14 +130,17 @@ class Recipe(models.Model):
     )
     cooking_time = models.PositiveIntegerField(
         verbose_name='Время приготовления',
-        default=0,
+        validators=[
+            MinValueValidator(1, 'Меньше минуты - не рецепт!')
+            ]
     )
+    recipes = RecipyQuerySet.as_manager()
 
     class Meta:
         default_related_name = 'recipes'
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
-        ordering = ('-pub_date', )
+        ordering = ('-created_at', )
 
     def __str__(self):
         return f'{self.name}. Автор: {self.author.username}'
@@ -168,7 +190,7 @@ class Cart(models.Model):
         verbose_name='Это список пользователя',
         on_delete=models.CASCADE,
     )
-    add_date = models.DateTimeField(
+    created_at = models.DateTimeField(
         verbose_name='Дата добавления',
         auto_now_add=True,
         editable=False
@@ -199,7 +221,7 @@ class Favorites(models.Model):
         verbose_name='Пользователь',
         on_delete=models.CASCADE,
     )
-    date_added = models.DateTimeField(
+    created_at = models.DateTimeField(
         verbose_name='Дата добавления',
         auto_now_add=True,
         editable=False,

@@ -27,7 +27,6 @@ INSTALLED_APPS = [
     'recipe.apps.RecipeConfig',
     'user.apps.UserConfig',
     'api.apps.ApiConfig',
-    'core.apps.CoreConfig',
 ]
 
 MIDDLEWARE = [
@@ -156,3 +155,5 @@ USER_MODEL_MAX_LEN = 150
 EMAIL_MAX_LEN = 254
 
 HEX_LEN = 7
+
+RECIPE_ON_PAGE = 6

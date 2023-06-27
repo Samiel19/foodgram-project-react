@@ -55,7 +55,7 @@ class FollowViewSet(viewsets.ModelViewSet):
         following = get_object_or_404(User, id=following_id)
         get_object_or_404(
             Follow, user=request.user, following=following
-            ).delete()
+        ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -116,7 +116,7 @@ class FavoritesViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, id=favorite_id)
         get_object_or_404(
             Favorites, user=request.user, recipe=recipe
-            ).delete()
+        ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -185,5 +185,5 @@ class CartViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, id=recipe_id)
         get_object_or_404(
             Cart, user=request.user, recipe=recipe
-            ).delete()
+        ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

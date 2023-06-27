@@ -16,7 +16,7 @@ class RecipyQuerySet(models.QuerySet):
             in_cart,
             author,
             tags
-            ):
+        ):
         if is_favorite:
             return self.filter(favorite_recipe__user=user)
         if in_cart:
@@ -132,7 +132,7 @@ class Recipe(models.Model):
         verbose_name='Время приготовления',
         validators=[
             MinValueValidator(1, 'Меньше минуты - не рецепт!')
-            ]
+        ]
     )
     recipes = RecipyQuerySet.as_manager()
 

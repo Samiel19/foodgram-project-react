@@ -2,27 +2,30 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinLengthValidator, MinValueValidator
 from django.db import models
 
-from foodgram.settings import RECIPE_MODEL_MAX_LEN, HEX_LEN
+from foodgram.settings import RECIPE_MODEL_MAX_LEN, HEX_LEN, HEX_DEFAULT_COLOR
 
 
 User = get_user_model()
 
 
+flags = {}
+
+
 class RecipyQuerySet(models.QuerySet):
     def recipe_filter(
-            self,
-            user,
-            is_favorite,
-            in_cart,
-            author,
-            tags
+            self, user,
+            **kwargs
     ):
-        if is_favorite:
-            return self.filter(favorite_recipe__user=user)
-        if in_cart:
-            return self.filter(in_cart__user=user)
-        if author:
-            return self.filter(author=author)
+        for flag, value in kwargs.items():
+            if flag == 'is_favorite' and value:
+                return self.filter(favorite_recipe__user=user)
+            elif flag == 'in_cart' and value:
+                return self.filter(in_cart__user=user)
+            elif flag == 'author' and value:
+                return self.filter(author=value)
+        return self
+
+    def recipe_tag_filter(self, tags):
         if tags:
             return self.filter(tags__slug__in=tags).distinct()
         else:
@@ -39,7 +42,7 @@ class Tag(models.Model):
     )
     color = models.CharField(
         verbose_name='Цвет',
-        default='#0000FF',
+        default=HEX_DEFAULT_COLOR,
         max_length=HEX_LEN,
         unique=True,
         validators=[MinLengthValidator(7)]
@@ -58,11 +61,6 @@ class Tag(models.Model):
 
     def __str__(self):
         return f'{self.name} {self.color}'
-
-    def clean(self):
-        self.name = self.name.strip().lower()
-        self.slug = self.slug.strip().lower()
-        return super().clean()
 
 
 class Ingredient(models.Model):

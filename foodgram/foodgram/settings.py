@@ -111,12 +111,12 @@ DJOSER = {
         'token_destroy': ['rest_framework.permissions.IsAuthenticated'],
     },
     'SERIALIZERS': {
-        'token_create': 'api.serializers.CustomTokenCreateSerializer',
-        'user': 'api.serializers.UserSerializer',
-        'current_user': 'api.serializers.UserSerializer',
-        'user_list': 'api.serializers.UserSerializer',
-        'current_user': 'api.serializers.UserSerializer',
-        'user_create': 'api.serializers.UserSerializer',
+        'token_create': 'api.users.serializers.CustomTokenCreateSerializer',
+        'user': 'api.users.serializers.UserSerializer',
+        'current_user': 'api.users.serializers.UserSerializer',
+        'user_list': 'api.users.serializers.UserSerializer',
+        'current_user': 'api.users.serializers.UserSerializer',
+        'user_create': 'api.users.serializers.UserSerializer',
     },
 }
 
@@ -155,5 +155,7 @@ USER_MODEL_MAX_LEN = 150
 EMAIL_MAX_LEN = 254
 
 HEX_LEN = 7
+
+HEX_DEFAULT_COLOR = '#0000FF'
 
 RECIPE_ON_PAGE = 6

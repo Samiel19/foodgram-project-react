@@ -8,9 +8,6 @@ from foodgram.settings import RECIPE_MODEL_MAX_LEN, HEX_LEN, HEX_DEFAULT_COLOR
 User = get_user_model()
 
 
-flags = {}
-
-
 class RecipyQuerySet(models.QuerySet):
     def recipe_filter(
             self, user,
@@ -45,7 +42,7 @@ class Tag(models.Model):
         default=HEX_DEFAULT_COLOR,
         max_length=HEX_LEN,
         unique=True,
-        validators=[MinLengthValidator(7)]
+        validators=[MinLengthValidator(HEX_LEN)]
     )
     slug = models.CharField(
         verbose_name='Слаг',

@@ -11,7 +11,13 @@ SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'backend', '158.160.19.247', ]
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'backend',
+    '158.160.19.247',
+    'foodgramsamiel19.hopto.org',
+]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 

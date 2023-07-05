@@ -1,3 +1,5 @@
+import os
+
 from decouple import config
 
 from pathlib import Path
@@ -5,14 +7,13 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 SECRET_KEY = config('SECRET_KEY')
 
-DEBUG = True
+DEBUG = False
 
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'backend', '158.160.19.247', ]
 
-ALLOWED_HOSTS = ['*']
-
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -62,10 +63,15 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'django'),
+        'USER': os.getenv('POSTGRES_USER', 'django'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', 5432)
     }
 }
+
 
 AUTH_USER_MODEL = 'user.FoodgramUser'
 
@@ -133,7 +139,7 @@ USE_TZ = True
 
 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'static'
+STATIC_ROOT = BASE_DIR / 'collected_static'
 
 
 MEDIA_URL = 'media/'
@@ -144,7 +150,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 PASSWORD_RESET_TIMEOUT = 60 * 60
-
 
 BANNED_SYMBOLS = r'^[\w.@+-]+$'
 

@@ -11,11 +11,11 @@
 
 ## Использованные технологии
 При разработке данного приложения использовались следующие технологии:
-#Python 3.10.6
-#Django REST Framework
-#PostgreSQL
-#Docker
-#Приложение развернуто на сервере YandexCloud
+# Python 3.10.6
+# Django REST Framework
+# PostgreSQL
+# Docker
+# Приложение развернуто на сервере YandexCloud
 
 ## Функциональность проекта
 Проект доступен по IP.
